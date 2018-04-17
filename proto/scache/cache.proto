@@ -1,0 +1,68 @@
+syntax = "proto3";
+
+import "scache/common.proto";
+
+package scache;
+
+service Cache {
+  rpc AddSource (AddSourceRequest) returns (AddSourceResponse) {}
+  rpc RemoveSource (RemoveSourceRequest) returns (RemoveSourceResponse) {}
+
+  rpc ListSources (ListSourcesRequest) returns (SourceList) {}
+  rpc ObserveSources (ListSourcesRequest) returns (stream SourceList) {}
+
+  rpc ListBlobs (ListBlobsRequest) returns (BlobList) {}
+  rpc ObserveBlobs (ListBlobsRequest) returns (stream BlobList) {}
+}
+
+message AddSourceRequest {
+  // Link without metadata.
+  Source skinny = 1;
+}
+
+message AddSourceResponse {
+  // Link with metadata.
+  Source source = 1;
+}
+
+message RemoveSourceRequest {
+  Source source = 1;
+}
+
+message RemoveSourceResponse {
+}
+
+message FilterExpression {
+  // If link is set, source_type must be set, etc.
+  // Field not set implies "any".
+  message Term {
+    string source_type = 1;
+    string link = 2;
+    string blob_id = 3;
+  }
+
+  // OR terms. Empty means "any".
+  repeated Term term = 1;
+
+  bool existing_items = 3;  // Only for Observe.
+}
+
+message ListSourcesRequest {
+  FilterExpression filter = 1;
+}
+
+message SourceList {
+  repeated Source source = 1;
+
+  Mutation mutation = 2;  // Only for Observe.
+}
+
+message ListBlobsRequest {
+  FilterExpression filter = 1;
+}
+
+message BlobList {
+  repeated Blob blob = 1;
+
+  Mutation mutation = 2;  // Only for Observe.
+}

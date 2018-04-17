@@ -1,0 +1,34 @@
+syntax = "proto3";
+
+package scache;
+
+service ProviderRegistry {
+    rpc AddProvider (ProviderSpec) returns (AddProviderResponse) {}
+    rpc RemoveProvider (ProviderSpec) returns (RemoveProviderResponse) {}
+    rpc ListProviders (ListProvidersRequest) returns (ListProvidersResponse) {}
+}
+
+message ProviderAddress {
+    string uri = 1;
+
+    // Defaults to gRPC.
+    string proto = 2;
+}
+
+message ProviderSpec {
+    ProviderAddress addr = 1;
+    repeated string source_type = 2;
+}
+
+message AddProviderResponse {
+}
+
+message RemoveProviderResponse {
+}
+
+message ListProvidersRequest {
+}
+
+message ListProvidersResponse {
+    repeated ProviderSpec provider = 1;
+}

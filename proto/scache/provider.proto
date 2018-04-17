@@ -1,0 +1,41 @@
+syntax = "proto3";
+
+package scache;
+
+import "scache/common.proto";
+
+service Provider {
+  // An error is returned if the type is not supported.
+  rpc SupportsType (Source) returns (SupportsTypeResponse) {}
+
+  // Creates an ephemeral source on a provider. Until the |Discover| is closed,
+  // the provider will act as a |ChunkStore| for this source, relaying all blob
+  // changes.
+  rpc Discover (Source) returns (stream DiscoveryInfo) {}
+}
+
+service ChunkStore {
+  rpc GetChunk (ChunkRequest) returns (Chunk) {}
+}
+
+message SupportsTypeResponse {
+}
+
+message DiscoveryInfo {
+  oneof info {
+    Source inflated = 1;
+    Blob blob_added = 2;  // Does double-duty for update.
+    Blob blob_removed = 3;
+  }
+}
+
+message ChunkRequest {
+  Blob blob = 1;
+  ByteRange range = 2;
+}
+
+message Chunk {
+  Blob blob = 1;
+  ByteRange range = 2;
+  bytes data = 3;
+}

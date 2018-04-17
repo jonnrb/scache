@@ -1,0 +1,41 @@
+syntax = "proto3";
+
+package scache;
+
+message ByteRange {
+  int64 low = 1;  // Inclusive
+  int64 high = 2; // Exclusive
+}
+
+enum Mutation {
+  NONE = 0;
+  ADD = 1;
+  REMOVE = 2;
+}
+
+message SourceMetadata {
+  string name = 1;
+}
+
+message Source {
+  string source_type = 1;
+  string link = 2;
+
+  // Set by server after discovery.
+  SourceMetadata metadata = 3;
+}
+
+message BlobMetadata {
+  string name = 1;
+}
+
+message Blob {
+  string source_type = 1;
+  string link = 2;
+  string blob_id = 3;
+
+  int64 length = 4;
+  repeated ByteRange range = 5;
+
+  BlobMetadata metadata = 6;
+}
