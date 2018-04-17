@@ -186,3 +186,33 @@ func (r *Registry) RemoveProvider(
 
 	return &removeProviderRes, nil
 }
+
+func (r *Registry) ListProviders(
+	ctx context.Context,
+	_ *scache.ListProvidersRequest,
+) (*scache.ListProvidersResponse, error) {
+
+	r.mu.RLock()
+	defer r.mu.RUnlock()
+
+	// Invert the map.
+	//
+	m := make(map[Provider][]string)
+	for sourceType, p := range r.typeMap {
+		m[p] = append(m[p], sourceType)
+	}
+
+	var res scache.ListProvidersResponse
+	for p, sourceTypes := range m {
+		proto, uri := p.Addr()
+
+		res.Provider = append(res.Provider, &scache.ProviderSpec{
+			Addr: &scache.ProviderAddress{
+				Uri:   uri,
+				Proto: proto,
+			},
+			SourceType: sourceTypes,
+		})
+	}
+	return &res, nil
+}
