@@ -1,8 +1,8 @@
 syntax = "proto3";
 
-import "scache/common.proto";
-
 package scache;
+
+import "scache/common.proto";
 
 service Cache {
   rpc AddSource (AddSourceRequest) returns (AddSourceResponse) {}

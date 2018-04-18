@@ -6,6 +6,6 @@ import (
 )
 
 var (
-	TypeNotAvailable = status.Error(
-		codes.Unavailable, "source type not available")
+	TypeNotAvailable        = status.Error(codes.Unavailable, "source type not available")
+	ChunkRequestMissingBlob = status.Error(codes.InvalidArgument, "ChunkRequest is missing blob")
 )

@@ -5,15 +5,18 @@ import (
 	"io"
 	"sync"
 
+	"github.com/golang/glog"
 	"github.com/jonnrb/scache/proto/scache"
 
 	"google.golang.org/grpc"
 )
 
 type GRPCProvider struct {
-	uri  string
+	uri string
+
 	conn *grpc.ClientConn
-	cli  scache.ProviderClient
+	pCli scache.ProviderClient
+	cCli scache.ChunkStoreClient
 
 	mu    sync.RWMutex
 	types map[string]bool
@@ -43,7 +46,8 @@ func (p *GRPCProvider) establishConn() error {
 		p.conn = conn
 	}
 
-	p.cli = scache.NewProviderClient(p.conn)
+	p.pCli = scache.NewProviderClient(p.conn)
+	p.cCli = scache.NewChunkStoreClient(p.conn)
 	return nil
 }
 
@@ -73,7 +77,7 @@ func (p *GRPCProvider) StartHandlingType(
 	}
 
 	s := scache.Source{SourceType: sourceType}
-	if _, err := p.cli.SupportsType(ctx, &s); err != nil {
+	if _, err := p.pCli.SupportsType(ctx, &s); err != nil {
 		return err
 	}
 
@@ -110,7 +114,7 @@ func (p *GRPCProvider) Num() int {
 	return len(p.types)
 }
 
-func (p *GRPCProvider) Discover(
+func (p *GRPCProvider) UpstreamDiscover(
 	ctx context.Context,
 	src *scache.Source,
 	out chan<- *scache.DiscoveryInfo,
@@ -126,7 +130,7 @@ func (p *GRPCProvider) Discover(
 			return nil, TypeNotAvailable
 		}
 
-		return p.cli.Discover(ctx, src)
+		return p.pCli.Discover(ctx, src)
 	}()
 	if err != nil {
 		return err
@@ -144,5 +148,54 @@ func (p *GRPCProvider) Discover(
 		}
 
 		out <- d
+	}
+}
+
+func (p *GRPCProvider) UpstreamGetChunk(
+	ctx context.Context,
+	req *scache.ChunkRequest,
+	w io.Writer,
+) error {
+
+	if req == nil || req.Blob == nil {
+		return ChunkRequestMissingBlob
+	}
+
+	cli, err := func() (scache.ChunkStore_GetChunkClient, error) {
+		p.mu.RLock()
+		defer p.mu.RUnlock()
+
+		if handlesType := p.types[req.Blob.SourceType]; !handlesType {
+			return nil, TypeNotAvailable
+		}
+
+		return p.cCli.GetChunk(ctx, req)
+	}()
+	if err != nil {
+		return err
+	}
+
+	for {
+		c, err := cli.Recv()
+
+		switch err {
+		case nil:
+		case io.EOF:
+			return nil
+		default:
+			return err
+		}
+
+		var n int
+		for n < len(c.Data) {
+			if m, err := w.Write(c.Data[n:]); err != nil {
+				if err := cli.CloseSend(); err != nil {
+					glog.Errorf("error closing stream: %v", err)
+				}
+				return err
+			} else {
+				n += m
+			}
+		}
 	}
 }

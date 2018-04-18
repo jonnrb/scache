@@ -15,7 +15,10 @@ service Provider {
 }
 
 service ChunkStore {
-  rpc GetChunk (ChunkRequest) returns (Chunk) {}
+  // If the message is longer than 12288 bytes, the result will be streamed in
+  // chunks not exceeding that length. The |blob| and |range| fields are not
+  // sent on subsequent messages.
+  rpc GetChunk (ChunkRequest) returns (stream Chunk) {}
 }
 
 message SupportsTypeResponse {
@@ -23,7 +26,11 @@ message SupportsTypeResponse {
 
 message DiscoveryInfo {
   oneof info {
+    // This should be sent as soon as possible down the channel if there is
+    // additional information to be relayed downstream. Otherwise, the provided
+    // |Source| can be just sent back immediately.
     Source inflated = 1;
+
     Blob blob_added = 2;  // Does double-duty for update.
     Blob blob_removed = 3;
   }
