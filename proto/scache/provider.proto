@@ -8,15 +8,15 @@ service Provider {
   // An error is returned if the type is not supported.
   rpc SupportsType (Source) returns (SupportsTypeResponse) {}
 
-  // Creates an ephemeral source on a provider. Until the |Discover| is closed,
-  // the provider will act as a |ChunkStore| for this source, relaying all blob
+  // Creates an ephemeral source on a provider. Until the `Discover` is closed,
+  // the provider will act as a `ChunkStore` for this source, relaying all blob
   // changes.
   rpc Discover (Source) returns (stream DiscoveryInfo) {}
 }
 
 service ChunkStore {
   // If the message is longer than 12288 bytes, the result will be streamed in
-  // chunks not exceeding that length. The |blob| and |range| fields are not
+  // chunks not exceeding that length. The `blob` and `range` fields are not
   // sent on subsequent messages.
   rpc GetChunk (ChunkRequest) returns (stream Chunk) {}
 }
@@ -28,7 +28,7 @@ message DiscoveryInfo {
   oneof info {
     // This should be sent as soon as possible down the channel if there is
     // additional information to be relayed downstream. Otherwise, the provided
-    // |Source| can be just sent back immediately.
+    // `Source` can be just sent back immediately.
     Source inflated = 1;
 
     Blob blob_added = 2;  // Does double-duty for update.

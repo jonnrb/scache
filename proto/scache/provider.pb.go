@@ -253,8 +253,8 @@ const _ = grpc.SupportPackageIsVersion4
 type ProviderClient interface {
 	// An error is returned if the type is not supported.
 	SupportsType(ctx context.Context, in *Source, opts ...grpc.CallOption) (*SupportsTypeResponse, error)
-	// Creates an ephemeral source on a provider. Until the |Discover| is closed,
-	// the provider will act as a |ChunkStore| for this source, relaying all blob
+	// Creates an ephemeral source on a provider. Until the `Discover` is closed,
+	// the provider will act as a `ChunkStore` for this source, relaying all blob
 	// changes.
 	Discover(ctx context.Context, in *Source, opts ...grpc.CallOption) (Provider_DiscoverClient, error)
 }
@@ -313,8 +313,8 @@ func (x *providerDiscoverClient) Recv() (*DiscoveryInfo, error) {
 type ProviderServer interface {
 	// An error is returned if the type is not supported.
 	SupportsType(context.Context, *Source) (*SupportsTypeResponse, error)
-	// Creates an ephemeral source on a provider. Until the |Discover| is closed,
-	// the provider will act as a |ChunkStore| for this source, relaying all blob
+	// Creates an ephemeral source on a provider. Until the `Discover` is closed,
+	// the provider will act as a `ChunkStore` for this source, relaying all blob
 	// changes.
 	Discover(*Source, Provider_DiscoverServer) error
 }
@@ -385,7 +385,7 @@ var _Provider_serviceDesc = grpc.ServiceDesc{
 
 type ChunkStoreClient interface {
 	// If the message is longer than 12288 bytes, the result will be streamed in
-	// chunks not exceeding that length. The |blob| and |range| fields are not
+	// chunks not exceeding that length. The `blob` and `range` fields are not
 	// sent on subsequent messages.
 	GetChunk(ctx context.Context, in *ChunkRequest, opts ...grpc.CallOption) (ChunkStore_GetChunkClient, error)
 }
@@ -434,7 +434,7 @@ func (x *chunkStoreGetChunkClient) Recv() (*Chunk, error) {
 
 type ChunkStoreServer interface {
 	// If the message is longer than 12288 bytes, the result will be streamed in
-	// chunks not exceeding that length. The |blob| and |range| fields are not
+	// chunks not exceeding that length. The `blob` and `range` fields are not
 	// sent on subsequent messages.
 	GetChunk(*ChunkRequest, ChunkStore_GetChunkServer) error
 }
