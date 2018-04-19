@@ -12,7 +12,7 @@ type BlobReader struct {
 	pos  int64
 }
 
-func (c *Conn) Blob(b *scache.Blob) (*BlobReader, error) {
+func (c *Conn) NewReader(b *scache.Blob) (*BlobReader, error) {
 	if err := c.state.GetError(); err != nil {
 		return nil, err
 	}
