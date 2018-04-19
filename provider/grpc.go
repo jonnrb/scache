@@ -33,7 +33,6 @@ func (p *GRPCProvider) Addr() (string, string) {
 }
 
 // Write mutex should be held.
-//
 func (p *GRPCProvider) establishConn() error {
 	if p.conn != nil {
 		return nil
