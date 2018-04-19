@@ -7,7 +7,6 @@ import (
 
 	"github.com/golang/glog"
 	"github.com/jonnrb/scache/proto/scache"
-
 	"google.golang.org/grpc"
 )
 
