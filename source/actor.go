@@ -55,14 +55,17 @@ func ConnectToUpstream(
 	u registry.Upstream,
 	dh DiscoveryHandler,
 ) error {
-	g, ctx := errgroup.WithContext(ctx)
+	grp, ctx := errgroup.WithContext(ctx)
 
 	diC := make(chan *scache.DiscoveryInfo)
-	g.Go(func() error {
+	grp.Go(func() error {
 		// First thing sent down the pipe should be the inflated scache.Source.
 		var inflated *scache.Source
 		select {
-		case initial := <-diC:
+		case initial, ok := <-diC:
+			if !ok {
+				return InflationMessageNotReceivedFirst
+			}
 			switch i := initial.Info.(type) {
 			case *scache.DiscoveryInfo_Inflated:
 				inflated = i.Inflated
@@ -93,7 +96,7 @@ func ConnectToUpstream(
 		return nil
 	})
 
-	g.Go(func() error { return u.UpstreamDiscover(ctx, src, diC) })
+	grp.Go(func() error { return u.UpstreamDiscover(ctx, src, diC) })
 
-	return g.Wait()
+	return grp.Wait()
 }

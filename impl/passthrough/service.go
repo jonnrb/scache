@@ -17,6 +17,13 @@ type Service struct {
 	sources map[string]map[string]*source.Conn
 }
 
+func New(r *registry.Registry) *Service {
+	return &Service{
+		Registry: r,
+		sources:  make(map[string]map[string]*source.Conn),
+	}
+}
+
 func (s *Service) sourceFor(sourceType, link string) *source.Conn {
 	if srcMap, ok := s.sources[sourceType]; !ok {
 		return nil
@@ -101,7 +108,11 @@ func (s *Service) ListSources(
 	var res scache.SourceList
 	for _, srcMap := range s.sources {
 		for _, conn := range srcMap {
-			res.Source = append(res.Source, conn.InflatedSource())
+			if src := conn.InflatedSource(); src != nil {
+				res.Source = append(res.Source, conn.InflatedSource())
+			} else {
+				glog.Error("nil inflated source")
+			}
 		}
 	}
 	return &res, nil

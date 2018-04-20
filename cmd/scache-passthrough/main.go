@@ -22,8 +22,8 @@ func main() {
 	scache.RegisterChunkStoreServer(srv, reg)
 	scache.RegisterProviderServer(srv, reg)
 
-	cache := passthrough.Service{Registry: reg}
-	scache.RegisterCacheServer(srv, &cache)
+	cache := passthrough.New(reg)
+	scache.RegisterCacheServer(srv, cache)
 
 	reflection.Register(srv)
 

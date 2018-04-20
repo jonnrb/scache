@@ -13,8 +13,7 @@ type Config struct {
 }
 
 type Conn struct {
-	state state
-
+	state  *state
 	u      registry.Upstream
 	ctx    context.Context
 	cancel context.CancelFunc
@@ -71,6 +70,7 @@ func Open(
 		}()
 
 		return &Conn{
+			state:  &s,
 			u:      u,
 			ctx:    connCtx,
 			cancel: cancel,
