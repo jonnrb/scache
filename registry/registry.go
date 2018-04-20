@@ -20,6 +20,13 @@ var (
 	removeProviderRes = scache.RemoveProviderResponse{}
 )
 
+func New() *Registry {
+	return &Registry{
+		typeMap:   make(map[string]Provider),
+		providers: make(map[string]map[string]Provider),
+	}
+}
+
 func (r *Registry) providerMapAdd(proto, uri string, p Provider) {
 	if r.providers[proto] == nil {
 		r.providers[proto] = make(map[string]Provider)
