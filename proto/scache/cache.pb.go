@@ -30,6 +30,7 @@ It has these top-level messages:
 	RemoveProviderResponse
 	ListProvidersRequest
 	ListProvidersResponse
+	GRPCProviderOpts
 	ByteRange
 	SourceMetadata
 	Source

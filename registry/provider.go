@@ -4,6 +4,7 @@ import (
 	"context"
 	"io"
 
+	"github.com/gogo/protobuf/proto"
 	"github.com/jonnrb/scache/proto/scache"
 )
 
@@ -16,6 +17,9 @@ type Provider interface {
 	// underlying connection. Providers with the same Addr() should be
 	// essentially identical other than handled types.
 	Addr() (string, string)
+
+	// Returns the options that this Provider was configured with, if any.
+	Opts() proto.Message
 
 	// Registers and deregisters source types that this Provider is responsible
 	// for handling. Successful invocations should affect the result of Num().

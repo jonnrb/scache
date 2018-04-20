@@ -5,13 +5,16 @@ import (
 	"io"
 	"sync"
 
+	"github.com/gogo/protobuf/proto"
 	"github.com/golang/glog"
 	"github.com/jonnrb/scache/proto/scache"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials"
 )
 
 type GRPCProvider struct {
-	uri string
+	uri  string
+	opts *scache.GRPCProviderOpts
 
 	conn *grpc.ClientConn
 	pCli scache.ProviderClient
@@ -21,9 +24,11 @@ type GRPCProvider struct {
 	types map[string]bool
 }
 
-func NewGRPCProvider(uri string) *GRPCProvider {
+func NewGRPCProvider(uri string, opts *scache.GRPCProviderOpts) *GRPCProvider {
 	return &GRPCProvider{
-		uri:   uri,
+		uri:  uri,
+		opts: opts,
+
 		types: make(map[string]bool),
 	}
 }
@@ -32,13 +37,28 @@ func (p *GRPCProvider) Addr() (string, string) {
 	return "grpc", p.uri
 }
 
+func (p *GRPCProvider) Opts() proto.Message {
+	return p.opts
+}
+
 // Write mutex should be held.
 func (p *GRPCProvider) establishConn() error {
 	if p.conn != nil {
 		return nil
 	}
 
-	if conn, err := grpc.Dial(p.uri); err != nil {
+	var dialOpts []grpc.DialOption
+
+	// Explicitly set gRPC TransportCredentials or pass WithInsecure.
+	dialOpts = append(dialOpts, func() grpc.DialOption {
+		if dialInsecure := p.opts != nil && p.opts.DialInsecure; dialInsecure {
+			return grpc.WithInsecure()
+		} else {
+			return grpc.WithTransportCredentials(credentials.NewTLS(nil))
+		}
+	}())
+
+	if conn, err := grpc.Dial(p.uri, dialOpts...); err != nil {
 		return err
 	} else {
 		p.conn = conn

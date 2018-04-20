@@ -5,6 +5,8 @@ import (
 	"sync"
 
 	"github.com/golang/glog"
+	"github.com/golang/protobuf/ptypes"
+	"github.com/golang/protobuf/ptypes/any"
 	"github.com/jonnrb/scache/proto/scache"
 	"github.com/jonnrb/scache/provider"
 )
@@ -64,7 +66,7 @@ func (r *Registry) AddProvider(
 	if s.Addr == nil {
 		return nil, NoAddrProvided
 	}
-	proto, uri := s.Addr.Proto, s.Addr.Uri
+	proto, uri, opts := s.Addr.Proto, s.Addr.Uri, s.Addr.Options
 
 	// The default proto is gRPC.
 	if proto == "" {
@@ -79,25 +81,42 @@ func (r *Registry) AddProvider(
 	if p = r.providerMapGet(proto, uri); p == nil {
 		switch proto {
 		case "grpc":
-			p = provider.NewGRPCProvider(uri)
+			gOpts, err := func() (*scache.GRPCProviderOpts, error) {
+				switch {
+				case opts != nil:
+					gOpts := &scache.GRPCProviderOpts{}
+					if err := ptypes.UnmarshalAny(opts, gOpts); err != nil {
+						return nil, err
+					}
+					return gOpts, nil
+				default:
+					return nil, nil
+				}
+			}()
+			if err != nil {
+				return nil, err
+			}
+			p = provider.NewGRPCProvider(uri, gOpts)
+
 		default:
+			glog.V(2).Infof("got unknown proto: %q", proto)
 			return nil, UnimplementedProto
 		}
 	}
 
-	// Register this provider for these types, and rollback on failure.s
+	// Register this provider for these types, and rollback on failure.
 	typesSucc := 0
-	rollBack := func() error {
+	rollBack := func(err error) error {
 		for _, t := range s.SourceType[:typesSucc] {
 			if err := p.StopHandlingType(ctx, t); err != nil {
 				return err
 			}
 		}
-		return nil
+		return err
 	}
 	for _, t := range s.SourceType {
 		if err := p.StartHandlingType(ctx, t); err != nil {
-			return nil, rollBack()
+			return nil, rollBack(err)
 		}
 		typesSucc += 1
 	}
@@ -204,10 +223,26 @@ func (r *Registry) ListProviders(
 	for p, sourceTypes := range m {
 		proto, uri := p.Addr()
 
+		opts, err := func() (*any.Any, error) {
+			switch opts := p.Opts(); opts {
+			case nil:
+				return nil, nil
+			default:
+				return ptypes.MarshalAny(opts)
+			}
+		}()
+		if err != nil {
+			glog.Errorf(
+				"error marshalling options for %q (via %v): %v",
+				uri, proto, err,
+			)
+		}
+
 		res.Provider = append(res.Provider, &scache.ProviderSpec{
 			Addr: &scache.ProviderAddress{
-				Uri:   uri,
-				Proto: proto,
+				Uri:     uri,
+				Proto:   proto,
+				Options: opts,
 			},
 			SourceType: sourceTypes,
 		})

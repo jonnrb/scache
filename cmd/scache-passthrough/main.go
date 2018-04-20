@@ -9,6 +9,7 @@ import (
 	"github.com/jonnrb/scache/proto/scache"
 	"github.com/jonnrb/scache/registry"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/reflection"
 )
 
 func main() {
@@ -23,6 +24,8 @@ func main() {
 
 	cache := passthrough.Service{Registry: reg}
 	scache.RegisterCacheServer(srv, &cache)
+
+	reflection.Register(srv)
 
 	lis, err := net.Listen("tcp", ":8080")
 	if err != nil {

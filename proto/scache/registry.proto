@@ -2,6 +2,8 @@ syntax = "proto3";
 
 package scache;
 
+import "google/protobuf/any.proto";
+
 service ProviderRegistry {
     rpc AddProvider (ProviderSpec) returns (AddProviderResponse) {}
     rpc RemoveProvider (ProviderSpec) returns (RemoveProviderResponse) {}
@@ -13,6 +15,11 @@ message ProviderAddress {
 
     // Defaults to gRPC.
     string proto = 2;
+
+    // Options to apply when first adding this provider. Valid until this
+    // provider (as indicated by `uri` and `proto`) handles no more source
+    // types.
+    google.protobuf.Any options = 3;
 }
 
 message ProviderSpec {
@@ -31,4 +38,8 @@ message ListProvidersRequest {
 
 message ListProvidersResponse {
     repeated ProviderSpec provider = 1;
+}
+
+message gRPCProviderOpts {
+    bool dial_insecure = 1;
 }
