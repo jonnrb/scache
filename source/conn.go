@@ -41,7 +41,7 @@ func Open(
 		select {
 		case <-s.connected:
 			return
-		case ctx.Done():
+		case <-ctx.Done():
 			cancel()
 		}
 	}()
