@@ -17,7 +17,7 @@ service Cache {
 
 message AddSourceRequest {
   // Link without metadata.
-  Source skinny = 1;
+  Source source = 1;
 }
 
 message AddSourceResponse {

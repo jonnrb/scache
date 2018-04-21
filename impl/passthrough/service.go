@@ -39,10 +39,10 @@ func (s *Service) AddSource(
 	req *scache.AddSourceRequest,
 ) (*scache.AddSourceResponse, error) {
 
-	if req.Skinny == nil {
+	if req.Source == nil {
 		return nil, NoSourceProvided
 	}
-	src := req.Skinny
+	src := req.Source
 
 	s.mu.Lock()
 	defer s.mu.Unlock()
