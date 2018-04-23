@@ -11,7 +11,7 @@ import (
 	"github.com/gogo/protobuf/jsonpb"
 	"github.com/golang/glog"
 	"github.com/jonnrb/scache/proto/scache"
-	"github.com/jonnrb/scache/registry"
+	"github.com/jonnrb/scache/provider"
 	"google.golang.org/grpc"
 )
 
@@ -32,7 +32,7 @@ func main() {
 		panic(err)
 	}
 	sc := scache.NewCacheClient(cc)
-	u := registry.NewGRPCUpstream(cc)
+	u := provider.NewGRPCUpstream(cc)
 
 	http.Serve(l, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if len(r.URL.Path) < 1 {
