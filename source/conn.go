@@ -76,6 +76,14 @@ func (c *Conn) Close() error {
 	return nil
 }
 
+func (c *Conn) Done() <-chan struct{} {
+	return c.ctx.Done()
+}
+
+func (c *Conn) Err() error {
+	return c.state.GetError()
+}
+
 // Do not edit the returned object.
 func (c *Conn) InflatedSource() *scache.Source {
 	return c.state.inflated
