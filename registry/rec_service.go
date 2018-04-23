@@ -56,7 +56,10 @@ func (r *Registry) Discover(
 	go func() { err = p.UpstreamDiscover(srv.Context(), src, c) }()
 	for info := range c {
 		if err := srv.Send(info); err != nil {
-			glog.V(2).Infof("error sending info downstream: %v", err)
+			if err != context.Canceled {
+				glog.V(2).Infof("error sending info downstream: %v", err)
+			}
+			return err
 		}
 	}
 	return err
