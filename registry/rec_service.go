@@ -87,7 +87,7 @@ func (w *chunkWriter) Write(b []byte) (n int, err error) {
 
 	c := scache.Chunk{Data: bufToSend}
 
-	if w.moreThanOne {
+	if !w.moreThanOne {
 		c.Blob = w.Blob
 		c.Range = w.Range
 	}
