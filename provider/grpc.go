@@ -120,6 +120,7 @@ func (p *GRPCProvider) StopHandlingType(
 		if err := p.conn.Close(); err != nil {
 			return err
 		}
+		p.conn = nil
 	}
 
 	return nil
