@@ -40,7 +40,7 @@ type chunkWriter []byte
 func (w *chunkWriter) Write(p []byte) (n int, err error) {
 	copied := min(len(p), len(*w))
 	copy(*w, p)
-	*w = (*w)[:copied]
+	*w = (*w)[copied:]
 	return copied, err
 }
 
@@ -62,6 +62,7 @@ func (r *BlobReader) Read(p []byte) (n int, err error) {
 		},
 	}
 	err = r.conn.u.UpstreamGetChunk(r.conn.ctx, &req, (*chunkWriter)(&p))
+	r.pos += int64(n)
 	return
 }
 
