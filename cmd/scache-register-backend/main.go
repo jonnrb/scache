@@ -67,5 +67,5 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	print("success")
+	println("success")
 }
