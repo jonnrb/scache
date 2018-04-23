@@ -34,30 +34,19 @@ func Open(
 	s := state{
 		connected: make(chan struct{}), // Closed upon connection.
 		blobs:     make(map[string]*scache.Blob),
+		cfg:       cfg,
 	}
 
-	go func() {
-		select {
-		case <-s.connected:
-			return
-		case <-ctx.Done():
-			cancel()
-		}
-	}()
-
 	errC := make(chan error, 1)
-	go func() {
-		errC <- ConnectToUpstream(connCtx, src, u, &s)
-		cancel()
-	}()
+	go func() { errC <- ConnectToUpstream(connCtx, src, u, &s) }()
 
 	select {
-	case err := <-errC:
-		// Upstream context err supplants ConnectToUpstream err.
-		if err := ctx.Err(); err != nil {
-			return nil, err
-		}
+	case <-ctx.Done():
+		cancel()
+		return nil, ctx.Err()
 
+	case err := <-errC:
+		cancel()
 		return nil, err
 
 	case <-s.connected:
@@ -67,6 +56,7 @@ func Open(
 			default:
 				s.SetError(err)
 			}
+			cancel()
 		}()
 
 		return &Conn{
