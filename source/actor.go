@@ -57,6 +57,8 @@ func ConnectToUpstream(
 ) error {
 	grp, ctx := errgroup.WithContext(ctx)
 
+	glog.V(3).Infof("(ctx %p) connecting to upstream: %+v", ctx, *src)
+
 	diC := make(chan *scache.DiscoveryInfo)
 	grp.Go(func() error {
 		// First thing sent down the pipe should be the inflated scache.Source.
@@ -64,21 +66,26 @@ func ConnectToUpstream(
 		select {
 		case initial, ok := <-diC:
 			if !ok {
+				glog.V(3).Infof("(ctx %p) inflation msg not inflated first", ctx)
 				return InflationMessageNotReceivedFirst
 			}
 			switch i := initial.Info.(type) {
 			case *scache.DiscoveryInfo_Inflated:
+				glog.V(3).Infof("(ctx %p) got inflation: %+v", ctx, *i.Inflated)
 				inflated = i.Inflated
 			default:
+				glog.V(3).Infof("(ctx %p) inflation msg not inflated first", ctx)
 				return InflationMessageNotReceivedFirst
 			}
 		case <-ctx.Done():
+			glog.V(3).Infof("(ctx %p) context expired", ctx)
 			return ctx.Err()
 		}
 
 		// Allow handler to short-circuit everything if it didn't like the
 		// inflated scache.Source.
 		if err := dh.ReceiveInflatedSource(inflated); err != nil {
+			glog.V(3).Infof("(ctx %p) inflation rejected: %v", ctx, err)
 			return err
 		}
 
@@ -89,7 +96,7 @@ func ConnectToUpstream(
 			case *scache.DiscoveryInfo_BlobRemoved:
 				dh.BlobRemoved(b.BlobRemoved)
 			default:
-				glog.V(2).Infof("got unexpected DiscoveryInfo: %+v", *di)
+				glog.V(3).Infof("(ctx %p) got unexpected DiscoveryInfo %v", ctx, b)
 			}
 		}
 
@@ -98,5 +105,9 @@ func ConnectToUpstream(
 
 	grp.Go(func() error { return u.UpstreamDiscover(ctx, src, diC) })
 
-	return grp.Wait()
+	if err := grp.Wait(); err != nil {
+		glog.V(3).Infof("(ctx %p) error: %v", ctx, err)
+		return err
+	}
+	return nil
 }
